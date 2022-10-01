@@ -75,6 +75,7 @@ exports.updateBootcamp = async (req, res, next) => {
 exports.deleteBootcamp = async (req, res, next) => {
   try {
     const bootcamp =  await Bootcamp.findByIdAndDelete(req.params.id)
+    console.log('---deleted', bootcamp)
     if (!bootcamp) {
       return res.status(400).json({success: false, data: {}})
     }
