@@ -4,7 +4,7 @@ const errorHandler = (err, req, res, next) => {
   // 因为message is not enumerable, 所以无法通过spread syntax复制过来
   error.message = err.message
 
-  console.log(err.stack)
+  // console.log(err.stack)
 
   // 不论是bootcamp id的格式错误还是格式正确但是不存在，err.name都是CastError <- 测试出来的结果(更有可能的是讲师之前已经知道了)
   // mongoose bad object id
