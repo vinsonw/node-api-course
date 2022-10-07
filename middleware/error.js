@@ -21,7 +21,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
 
+  // Schema验证错误
   if (err.name === 'ValidationError') {
+    console.log('--I will show up for ValidationError---');
     const message = Object.values(err.errors).map(val => val.message).join(';')
     error = new ErrorResponse(message, 400)
   }
