@@ -74,6 +74,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     });
 };
 
+// @route GET /api/v1/auth/me
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   res.status(200).json({
@@ -82,6 +83,37 @@ exports.getMe = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @route PUT /api/v1/auth/updateuserinfo
+exports.updateUserInfo = asyncHandler(async (req, res, next) => {
+  const fieldsToUpdate = {
+    email: req.body.email,
+    name: req.body.name
+  }
+  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+// @route PUT /api/v1/auth/changepassword
+exports.changePassword = asyncHandler(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body
+  const user = await User.findById(req.user.id).select('+password')
+  if (!(await user.matchPassword(currentPassword))) {
+    next(new ErrorResponse('Wrong password', 400))
+  }
+  user.password = newPassword
+  await user.save()
+  sendTokenResponse(user, 200, res)
+})
+
+
+// @route POST /api/v1/auth/forgotpassword
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
@@ -100,7 +132,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     "host"
   )}/api/v1/auth/resetpassword/${resetToken}`;
 
-  // 因为没有前端，所以需要用postman像特定endpoint(这里是resetUrl)发起PUT请求来重置密码
+  // 因为没有前端，所以需要用postman向特定endpoint(这里是resetUrl)发起PUT请求来重置密码
   const message = `You are receiving this email because you (or someone else) has requested the reset of a 
   password. PLease make a PUT request to \n\n ${resetUrl}`;
 

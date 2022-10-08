@@ -43,6 +43,10 @@ const auth = require('./routes/auth')
 app.use('/api/v1/auth', auth)
 
 
+const users = require('./routes/users')
+app.use('/api/v1/users', users)
+
+
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000
