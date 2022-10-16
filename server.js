@@ -47,6 +47,10 @@ const users = require('./routes/users')
 app.use('/api/v1/users', users)
 
 
+// 必须在errorHandler前面，否则没有nice的错误返回
+const reviews = require('./routes/reviews')
+app.use('/api/v1/reviews', reviews)
+
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000

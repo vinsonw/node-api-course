@@ -14,12 +14,14 @@ const advancedResults = require('../middleware/advancedResults')
 const {protect, authorize} = require('../middleware/auth')
 const Bootcamp = require('../models/Bootcamp')
 const courseRouter = require('./courses')
+const reviewRouter = require('./reviews')
 const router = express.Router();
 
 
 
 // 将特定route委托给响应的router处理
 router.use('/:bootcampId/courses', courseRouter)
+router.use('/:bootcampId/reviews', reviewRouter)
 
 
 router

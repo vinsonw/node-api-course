@@ -1,6 +1,6 @@
-const colors = require('colors')
+const colors = require("colors");
 const mongoose = require("mongoose");
-const Bootcamp = require('./Bootcamp')
+const Bootcamp = require("./Bootcamp");
 
 const CourseSchema = new mongoose.Schema({
   title: {
@@ -22,66 +22,65 @@ const CourseSchema = new mongoose.Schema({
   },
   minimumSkill: {
     type: String,
-    required: [true, 'Please add a minimum skill']
+    required: [true, "Please add a minimum skill"],
   },
   scholarshipAvailable: {
     type: Boolean,
-    default: false
+    default: false,
   },
   cratedAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   bootcamp: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Bootcamp',
-    required: true
+    ref: "Bootcamp",
+    required: true,
   },
   user: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
-  }
+    ref: "User",
+    required: true,
+  },
 });
 
 // Static method to get avg of course tuitions
-CourseSchema.statics.getAverageCost = async function(bootcampId) {
-  console.log('Calculating avg cost'.blue)
+CourseSchema.statics.getAverageCost = async function (bootcampId) {
+  console.log("Calculating avg cost".blue);
 
   // This is called "Aggregation Pipline"
   // https://www.mongodb.com/docs/manual/core/aggregation-pipeline/
   const obj = await this.aggregate([
     {
-      $match: {bootcamp: bootcampId}
+      $match: { bootcamp: bootcampId },
     },
     {
       $group: {
-        _id: '$bootcamp',
-        averageCost: {$avg: '$tuition'}
-      }
-    }
-  ])
+        _id: "$bootcamp",
+        averageCost: { $avg: "$tuition" },
+      },
+    },
+  ]);
   // console.log('--obj.averageCost',obj[0].averageCost);
   // 将aggreation结果存入bootcamps表中
   // TODO 存在本地会出现bootcamps表中averageCost字段部分值丢失的情况
   try {
-    await this.model('Bootcamp').findByIdAndUpdate(bootcampId, {
-      averageCost: Math.ceil(obj[0].averageCost / 10) * 10
-    })
+    await this.model("Bootcamp").findByIdAndUpdate(bootcampId, {
+      averageCost: Math.ceil(obj[0].averageCost / 10) * 10,
+    });
   } catch (error) {
-    console.log('---error', error)
+    console.log("---error", error);
   }
-}
+};
 
-// Call getAverageCost after save
-CourseSchema.post('save', function() {
-  this.constructor.getAverageCost(this.bootcamp)
-})
+// Call getAverageCost after save(注意seeder导入无效)
+CourseSchema.post("save", function () {
+  this.constructor.getAverageCost(this.bootcamp);
+});
 
-// Call getAverageCost before remove
-CourseSchema.pre('remove', function() {
-  this.constructor.getAverageCost(this.bootcamp)
-})
+// Call getAverageCost before remove(注意seeder导入无效)
+CourseSchema.pre("remove", function () {
+  this.constructor.getAverageCost(this.bootcamp);
+});
 
-
-module.exports = mongoose.model('Course', CourseSchema)
+module.exports = mongoose.model("Course", CourseSchema);
