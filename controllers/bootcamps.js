@@ -1,8 +1,8 @@
 const Bootcamp = require("../models/Bootcamp");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-const geocoder = require('../utils/geocoder')
-const path = require('path')
+const geocoder = require("../utils/geocoder");
+const path = require("path");
 
 // @desc    Get all bootcamps
 // @route   GET /api/v1/bootcamps
@@ -16,7 +16,7 @@ exports.getBootcamps = asyncHandler(async (req, res, next) => {
 // @access  Public
 exports.getBootcamp = asyncHandler(async (req, res, next) => {
   try {
-    const bootcamp = await Bootcamp.findById(req.params.id).populate('courses');
+    const bootcamp = await Bootcamp.findById(req.params.id).populate("courses");
     if (!bootcamp) {
       return next(
         new ErrorResponse(`Bootcamp not found with ${req.params.id}`, 404)
@@ -36,16 +36,20 @@ exports.createBootcamp = asyncHandler(async (req, res, next) => {
   // app.use(express.json())
 
   // add user to req.body
-  req.body.user = req.user.id // from middleware
+  req.body.user = req.user.id; // from middleware
 
   // check for published bootcamp
-  const publishedBootcamp = await Bootcamp.findOne({ user: req.user.id })
+  const publishedBootcamp = await Bootcamp.findOne({ user: req.user.id });
 
   // If the user is not admin, they can only add one bootcamp
-  if (publishedBootcamp && req.user.role !== 'admin') {
-    return next(new ErrorResponse(`The user with id ${req.user.id} has already published a bootcamp`, 400))
+  if (publishedBootcamp && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `The user with id ${req.user.id} has already published a bootcamp`,
+        400
+      )
+    );
   }
-
 
   const bootcamp = await Bootcamp.create(req.body);
 
@@ -59,7 +63,7 @@ exports.createBootcamp = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/v1/bootcamp/:id
 // @access  Public
 exports.updateBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+  let bootcamp = await Bootcamp.findById(req.params.id);
   if (!bootcamp) {
     return next(
       new ErrorResponse(`Bootcamp not found with ${req.params.id}`, 404)
@@ -67,16 +71,19 @@ exports.updateBootcamp = asyncHandler(async (req, res, next) => {
   }
 
   // make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
     return next(
-      new ErrorResponse(`Not authorized to update bootcamp with id ${req.params.id}`, 401)
+      new ErrorResponse(
+        `Not authorized to update bootcamp with id ${req.params.id}`,
+        401
+      )
     );
   }
 
-  bootcamp = await Bootcamp.findByIdAndUpdate(req.param.id, req.body, {
+  bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // respond with "new"(updated) data
     runValidators: true,
-  })
+  });
   res.status(200).json({ success: true, data: bootcamp });
 });
 
@@ -95,14 +102,17 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
   }
 
   // make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
     return next(
-      new ErrorResponse(`Not authorized to delelte bootcamp with id ${req.params.id}`, 401)
+      new ErrorResponse(
+        `Not authorized to delelte bootcamp with id ${req.params.id}`,
+        401
+      )
     );
   }
 
   // 触发BootcampSchema.pre('remove', action)钩子
-  bootcamp.remove()
+  bootcamp.remove();
 
   res
     .status(200)
@@ -115,21 +125,21 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
 exports.getBootcampsInRadius = asyncHandler(async (req, res, next) => {
   const { zipcode, distance } = req.params;
   const loc = await geocoder.geocode(zipcode);
-  const lng = loc[0].longitude
-  const lat = loc[0].latitude
+  const lng = loc[0].longitude;
+  const lat = loc[0].latitude;
 
   // 计算半径
   // 地球半径 3963 miles or 6378 km (这里使用miles)
-  const radius = distance / 3963
+  const radius = distance / 3963;
 
   const bootcamps = await Bootcamp.find({
-    'location.coordinates': { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
+    "location.coordinates": {
+      $geoWithin: { $centerSphere: [[lng, lat], radius] },
+    },
   });
   const count = bootcamps.length;
   res.status(200).json({ success: true, count, data: bootcamps });
 });
-
-
 
 // @desc    Upload a bootcamp photo
 // @route   PUT /api/v1/bootcamp/:id/photo
@@ -146,44 +156,54 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
   }
 
   // make sure user is bootcamp owner
-  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
     return next(
-      new ErrorResponse(`Not authorized to update bootcamp with id ${req.params.id}`, 401)
+      new ErrorResponse(
+        `Not authorized to update bootcamp with id ${req.params.id}`,
+        401
+      )
     );
   }
 
   if (!req.files) {
-    return next(new ErrorResponse('Please upload a photo', 400))
+    return next(new ErrorResponse("Please upload a photo", 400));
   }
 
-  const file = req.files.file
+  const file = req.files.file;
 
-  if (!file.mimetype.startsWith('image')) {
-    return next(new ErrorResponse('Please upload a photo, this is not a photo', 400))
+  if (!file.mimetype.startsWith("image")) {
+    return next(
+      new ErrorResponse("Please upload a photo, this is not a photo", 400)
+    );
   }
 
   if (file.size > process.env.MAX_FILE_UPLOAD) {
-    return next(new ErrorResponse(`Please upload a photo less than ${process.env.MAX_FILE_UPLOAD / 1000000}M`, 400))
+    return next(
+      new ErrorResponse(
+        `Please upload a photo less than ${
+          process.env.MAX_FILE_UPLOAD / 1000000
+        }M`,
+        400
+      )
+    );
   }
 
   // Create custom filename
-  file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}` //添加原文件名后缀
+  file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}`; //添加原文件名后缀
 
   // 下面的process.env.FILE_UPLOAD_PATH存的路径是"./public/uploads"
   // 嗯....？
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async err => {
+  file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
     if (err) {
-      console.error(err)
-      return next(new ErrorResponse(`Problem with uploading`, 500))
+      console.error(err);
+      return next(new ErrorResponse(`Problem with uploading`, 500));
     }
 
     // 文件名存到bootcamps表的photo字段
     await Bootcamp.findByIdAndDelete(req.param.id, {
-      photo: file.name
-    })
-  })
-  console.log(file.name)
-  res
-    .status(200)
-    .json({ success: true, data: file.name });
+      photo: file.name,
+    });
+  });
+  console.log(file.name);
+  res.status(200).json({ success: true, data: file.name });
 });
